@@ -33,18 +33,18 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		message := fmt.Sprintf("%s already logged in!", user.Login)
 		w.Write([]byte(message))
 	} else {
-		flag, err := user.CheckUserRegister() // проверка, есть ли пользователем с введенным логином
+		answer, err := user.CheckUserRegister() // проверка, есть ли пользователем с введенным логином
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
-		if flag == 3 { // если flag == 3, то пользователь уже есть, отмена операции
+		if answer == "exists" { // если answer == exists, то пользователь уже есть, отмена операции
 			message := fmt.Sprintf("User %s already exists!", user.Login)
 			w.Write([]byte(message))
 			return
 		}
 
-		err = user.GeneratePassword() // в случае, если пользотвателя нет, то пароль шифруется
+		err = user.GeneratePassword() // в случае, если пользователя нет, то пароль шифруется
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -81,7 +81,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(message))
 	} else {
 		message, err := user.CheckUserLogin() // проверка, есть ли пользователем с введенным логином
-		if err == sql.ErrNoRows {             // в базе данных не найден пользователь с указанным логином
+
+		if err == sql.ErrNoRows { // в базе данных не найден пользователь с указанным логином
 			log.Println(message)
 		} else if err != nil { // ошибка во время исполнения запроса
 			log.Println(err)

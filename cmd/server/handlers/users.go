@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/solumD/go-social-media-api/cmd/server/database"
@@ -16,25 +15,21 @@ var (
 )
 
 type User struct {
-	Id       int    `json:"id"`
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
 
 // Метод создает пользователя и добавляет его в базу данных
 func (u User) CreateUser() (string, error) {
-	query := `insert into users(login, password) values (?, ?)`
-	data := []any{u.Login, u.Password}
-	_, err := database.DBConn.Exec(query, data...)
+	err := database.InsertUser(u.Login, u.Password)
 	if err != nil {
-		log.Println(err)
 		return "", err
 	}
 	response := fmt.Sprintf("Successfully created a user: %s", u.Login)
 	return response, nil
 }
 
-// Метод шифрует пароль
+// Метод шифрует пароль пользователя
 func (u *User) GeneratePassword() error {
 	cost := 10
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), cost)
@@ -47,11 +42,8 @@ func (u *User) GeneratePassword() error {
 
 // Метод проверяет во время входа в аккаунт, существует ли пользователь с введенным логином
 func (u User) CheckUserLogin() (string, error) {
-	var realUser User
 	var message string
-	query := `select id, login, password from users where login = ?`
-	row := database.DBConn.QueryRow(query, u.Login)
-	err := row.Scan(&realUser.Id, &realUser.Login, &realUser.Password)
+	realPass, err := database.SelectUser(u.Login)
 
 	if err == sql.ErrNoRows {
 		message = "This user doesn't exist!"
@@ -59,7 +51,7 @@ func (u User) CheckUserLogin() (string, error) {
 	} else if err != nil {
 		return "", err
 	} else {
-		err = bcrypt.CompareHashAndPassword([]byte(realUser.Password), []byte(u.Password))
+		err = bcrypt.CompareHashAndPassword([]byte(realPass), []byte(u.Password))
 		if err != nil {
 			return "Invalid password", err
 		}
@@ -69,15 +61,12 @@ func (u User) CheckUserLogin() (string, error) {
 }
 
 // Метод проверяет во время регистрации, существует ли пользователь с введенным логином
-func (u User) CheckUserRegister() (int, error) {
-	var realUser User
-	query := `select id, login, password from users where login = ?`
-	row := database.DBConn.QueryRow(query, u.Login)
-	err := row.Scan(&realUser.Id, &realUser.Login, &realUser.Password)
+func (u User) CheckUserRegister() (string, error) {
+	_, err := database.SelectUser(u.Login)
 	if err == sql.ErrNoRows {
-		return 1, nil
+		return "doesn't exist", nil
 	} else if err != nil {
-		return 2, err
+		return "error", err
 	}
-	return 3, nil
+	return "exists", nil
 }
