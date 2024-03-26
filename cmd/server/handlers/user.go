@@ -16,13 +16,12 @@ var (
 
 type User struct {
 	Login    string `json:"login"`
-	Password string `json:"password"`
+	Password string `json:"password,omitempty"`
 }
 
 // Метод создает пользователя и добавляет его в базу данных
 func (u User) CreateUser() (string, error) {
-	err := database.InsertUser(u.Login, u.Password)
-	if err != nil {
+	if err := database.InsertUser(u.Login, u.Password); err != nil {
 		return "", err
 	}
 	response := fmt.Sprintf("Successfully created a user: %s", u.Login)
@@ -30,33 +29,28 @@ func (u User) CreateUser() (string, error) {
 }
 
 // Метод шифрует пароль пользователя
-func (u *User) GeneratePassword() error {
+func (u *User) EncryptPassword() error {
 	cost := 10
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), cost)
-	u.Password = string(hash)
 	if err != nil {
 		return err
 	}
+	u.Password = string(hash)
 	return nil
 }
 
 // Метод проверяет во время входа в аккаунт, существует ли пользователь с введенным логином
-func (u User) CheckUserLogin() (string, error) {
-	var message string
+func (u User) CheckUserLogin() error {
 	realPass, err := database.SelectUser(u.Login)
-
 	if err == sql.ErrNoRows {
-		message = "This user doesn't exist!"
-		return message, errors.New("invalid login")
+		return errors.New("invalid login")
 	} else if err != nil {
-		return "", err
+		return err
 	} else {
-		err = bcrypt.CompareHashAndPassword([]byte(realPass), []byte(u.Password))
-		if err != nil {
-			return "Invalid password", err
+		if err = bcrypt.CompareHashAndPassword([]byte(realPass), []byte(u.Password)); err != nil {
+			return err
 		}
-		message = fmt.Sprintf("Welcome Back, %s", u.Login)
-		return message, nil
+		return nil
 	}
 }
 
@@ -69,4 +63,8 @@ func (u User) CheckUserRegister() (string, error) {
 		return "error", err
 	}
 	return "exists", nil
+}
+
+func (u User) ExitFromaAccount() {
+
 }

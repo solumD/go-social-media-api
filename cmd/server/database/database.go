@@ -11,16 +11,10 @@ var (
 	DBConn *sql.DB
 )
 
-type User struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
-}
-
 func InsertUser(login, password string) error {
 	query := `insert into users(login, password) values (?, ?)`
 	data := []any{login, password}
-	_, err := DBConn.Exec(query, data...)
-	if err != nil {
+	if _, err := DBConn.Exec(query, data...); err != nil {
 		log.Println(err)
 		return err
 	}
@@ -28,12 +22,16 @@ func InsertUser(login, password string) error {
 }
 
 func SelectUser(login string) (string, error) {
-	var realUser User
+	type TempUser struct {
+		Login    string `json:"login"`
+		Password string `json:"password"`
+	}
+	var user TempUser
 	query := `select login, password from users where login = ?`
 	row := DBConn.QueryRow(query, login)
-	err := row.Scan(&realUser.Login, &realUser.Password)
+	err := row.Scan(&user.Login, &user.Password)
 	if err != nil {
 		return "", err
 	}
-	return realUser.Password, nil
+	return user.Password, nil
 }
