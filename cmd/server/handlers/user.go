@@ -3,15 +3,10 @@ package handlers
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/solumD/go-social-media-api/cmd/server/database"
 	"golang.org/x/crypto/bcrypt"
-)
-
-var (
-	CurrentUsers = make(map[string]struct{}) // мапа с текущими пользователями
 )
 
 type User struct {
@@ -20,12 +15,11 @@ type User struct {
 }
 
 // Метод создает пользователя и добавляет его в базу данных
-func (u User) CreateUser() (string, error) {
+func (u User) CreateUser() error {
 	if err := database.InsertUser(u.Login, u.Password); err != nil {
-		return "", err
+		return err
 	}
-	response := fmt.Sprintf("Successfully created a user: %s", u.Login)
-	return response, nil
+	return nil
 }
 
 // Метод шифрует пароль пользователя
@@ -63,8 +57,4 @@ func (u User) CheckUserRegister() (string, error) {
 		return "error", err
 	}
 	return "exists", nil
-}
-
-func (u User) ExitFromaAccount() {
-
 }
