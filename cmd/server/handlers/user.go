@@ -14,6 +14,10 @@ type User struct {
 	Password string `json:"password,omitempty"`
 }
 
+var (
+	CurrentUsers = make(map[string]struct{}) // мапа с текущими пользователями
+)
+
 // Метод создает пользователя и добавляет его в базу данных
 func (u User) CreateUser() error {
 	if err := database.InsertUser(u.Login, u.Password); err != nil {

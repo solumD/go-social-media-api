@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/solumD/go-social-media-api/cmd/server/handlers/jwt"
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -32,16 +34,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		} else { // все ок
-			userToken, err := GenerateJWTToken(user.Login) // проверка на правильность введенного токена
+			userToken, err := jwt.GenerateJWTToken(user.Login) // проверка на правильность введенного токена
 			if err != nil {
 				log.Println(err)
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
 			message = fmt.Sprintf("Welcome Back, %s!\nYour jwt-token: %s\nDon't lose it!", user.Login, userToken)
-			w.Write([]byte(message))
 			w.WriteHeader(http.StatusOK)
-			CurrentUsers[user.Login] = userToken // выполнен вход в аккаунт, человек добавляется в список текущик пользователе
+			w.Write([]byte(message))
+			CurrentUsers[user.Login] = struct{}{} // выполнен вход в аккаунт, человек добавляется в список текущик пользователе
 			log.Println(CurrentUsers)
 		}
 	}
