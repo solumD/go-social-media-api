@@ -11,6 +11,10 @@ var (
 	DBConn *sql.DB
 )
 
+var (
+	CurrentUsers = make(map[string]struct{}) // мапа с текущими пользователями
+)
+
 func InsertUser(login, password string) error {
 	query := `insert into users(login, password) values (?, ?)`
 	data := []any{login, password}

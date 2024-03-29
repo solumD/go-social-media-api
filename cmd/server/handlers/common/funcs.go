@@ -1,14 +1,16 @@
-package handlers
+package common
 
 import (
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
+
+	"github.com/solumD/go-social-media-api/cmd/server/handlers/person"
 )
 
-func UnmarshalBody(r *http.Request) (*User, error) {
-	var user User
+func UnmarshalBody(r *http.Request) (*person.User, error) {
+	var user person.User
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err

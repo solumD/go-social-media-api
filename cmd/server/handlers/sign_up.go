@@ -5,18 +5,20 @@ import (
 	"log"
 	"net/http"
 
+	db "github.com/solumD/go-social-media-api/cmd/server/database"
+	"github.com/solumD/go-social-media-api/cmd/server/handlers/common"
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/jwt"
 )
 
 func Register(w http.ResponseWriter, r *http.Request) {
-	user, err := UnmarshalBody(r)
+	user, err := common.UnmarshalBody(r)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	answer, err := user.CheckUserRegister() // проверка, есть ли пользователем с введенным логином
+	answer, err := common.CheckUserRegister(user.Login) // проверка, есть ли пользователем с введенным логином
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusNotAcceptable)
@@ -45,9 +47,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
-	CurrentUsers[user.Login] = struct{}{}
+	db.CurrentUsers[user.Login] = struct{}{}
 	message := fmt.Sprintf("Welcome, %s!\nYour jwt-token: %s\nDon't lose it!", user.Login, userToken) // выполнен вход в аккаунт, человек добавляется в список текущик пользователей
-	log.Println(CurrentUsers)
+	log.Println(db.CurrentUsers)
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(message))
 }
