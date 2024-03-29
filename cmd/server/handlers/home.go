@@ -31,6 +31,11 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	post.Login = login
+	if len(post.Title) == 0 || len(post.Content) == 0 {
+		w.WriteHeader(http.StatusBadGateway)
+		w.Write([]byte("Post's title and content can't be empty"))
+		return
+	}
 	user_id, err := db.SelectUserId(login)
 	if err != nil {
 		log.Println(err)
