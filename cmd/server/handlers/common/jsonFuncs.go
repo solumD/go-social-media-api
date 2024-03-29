@@ -21,6 +21,22 @@ func UnmarshalBody(r *http.Request) (*person.User, error) {
 		}
 		return &user, nil
 	} else {
-		return nil, errors.New("invalid json Input")
+		return nil, errors.New("invalid json User Input")
+	}
+}
+
+func UnmarshalPost(r *http.Request) (*person.Post, error) {
+	var post person.Post
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	if json.Valid(body) {
+		if err = json.Unmarshal(body, &post); err != nil {
+			return nil, err
+		}
+		return &post, nil
+	} else {
+		return nil, errors.New("invalid json Post Input")
 	}
 }

@@ -36,6 +36,9 @@ func initHandlers(r *chi.Mux) {
 
 	// выход из аккаунта
 	r.Post(`/exit`, handlers.Exit)
+
+	// создание поста пользователем
+	r.Post(`/createpost`, handlers.Create)
 }
 
 func Server() {

@@ -39,3 +39,32 @@ func SelectUser(login string) (string, error) {
 	}
 	return user.Password, nil
 }
+
+func SelectUserId(login string) (int, error) {
+	type ID struct {
+		user_id int
+	}
+	var id ID
+	query := `select id from users where login = ?`
+	row := DBConn.QueryRow(query, login)
+	err := row.Scan(&id.user_id)
+	if err != nil {
+		return 0, err
+	}
+	return id.user_id, nil
+}
+
+type Post struct {
+	Login   string `json:"user"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
+}
+
+func InserPost(user_id int, title, content, date string) error {
+	query := `insert into posts(user_id, title, content, date_created) values (?, ?, ?, ?)`
+	data := []any{user_id, title, content, date}
+	if _, err := DBConn.Exec(query, data...); err != nil {
+		return err
+	}
+	return nil
+}
