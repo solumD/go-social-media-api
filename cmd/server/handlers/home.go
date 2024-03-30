@@ -1,9 +1,13 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"sync"
 
+	"github.com/go-chi/chi/v5"
 	db "github.com/solumD/go-social-media-api/cmd/server/database"
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/common"
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/jwt"
@@ -11,7 +15,7 @@ import (
 )
 
 // Хендлер домашней страницы
-func Home(w http.ResponseWriter, r *http.Request) {
+func Feed(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("All News"))
 }
 
@@ -49,4 +53,44 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Post created!"))
+}
+
+func GetUserPosts(w http.ResponseWriter, r *http.Request) {
+	login := chi.URLParam(r, "user")
+	if len(login) == 0 {
+		http.Error(w, "expected username after /user/", http.StatusBadRequest)
+		return
+	}
+	posts, err := db.SelectUserPosts(login)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if len(posts) == 0 {
+		message := fmt.Sprintf("%s hasn't post something yet :(", login)
+		w.Write([]byte(message))
+		return
+	} else {
+		message := fmt.Sprintf("|  %s's posts |\n\n", login)
+		w.Write([]byte(message))
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(len(posts))
+	for _, v := range posts {
+		go func(p db.Post) {
+			data, err := json.MarshalIndent(p, "", "\t")
+			if err != nil {
+				w.WriteHeader(http.StatusBadGateway)
+				http.Error(w, "Error in marshalling json", http.StatusBadGateway)
+				return
+			}
+			w.Write(data)
+			wg.Done()
+		}(v)
+	}
+	wg.Wait()
+
+	w.Header().Add("Content-Type", "application/json; charset = UTF-8")
 }

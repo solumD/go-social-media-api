@@ -26,7 +26,7 @@ func initDataBase() {
 
 func initHandlers(r *chi.Mux) {
 	// домашняя страница
-	r.Get(`/home`, handlers.Home)
+	r.Get(`/feed`, handlers.Feed)
 
 	// регистрация
 	r.Post(`/register`, handlers.Register)
@@ -39,6 +39,9 @@ func initHandlers(r *chi.Mux) {
 
 	// создание поста пользователем
 	r.Post(`/createpost`, handlers.Create)
+
+	// вывод всех постов конкретного пользователя
+	r.Get("/users/{user}", handlers.GetUserPosts)
 }
 
 func Server() {
