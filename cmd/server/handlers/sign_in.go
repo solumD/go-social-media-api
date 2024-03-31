@@ -11,6 +11,7 @@ import (
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/jwt"
 )
 
+// Вход пользователя в свой аккаунт
 func Login(w http.ResponseWriter, r *http.Request) {
 	user, err := common.UnmarshalBody(r)
 	if err != nil {
@@ -36,7 +37,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		} else { // все ок
-			userToken, err := jwt.GenerateJWTToken(user.Login) // проверка на правильность введенного токена
+			userToken, err := jwt.GenerateJWTToken(user.Login) // генерация jwt токена
 			if err != nil {
 				log.Println(err)
 				http.Error(w, err.Error(), http.StatusBadRequest)

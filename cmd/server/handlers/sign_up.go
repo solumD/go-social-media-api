@@ -10,6 +10,7 @@ import (
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/jwt"
 )
 
+// Регистрация пользователя
 func Register(w http.ResponseWriter, r *http.Request) {
 	user, err := common.UnmarshalBody(r)
 	if err != nil {
@@ -17,7 +18,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	answer, err := common.CheckUserRegister(user.Login) // проверка, есть ли пользователем с введенным логином
 	if err != nil {
 		log.Println(err)
@@ -41,7 +41,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
-	userToken, err := jwt.GenerateJWTToken(user.Login)
+	userToken, err := jwt.GenerateJWTToken(user.Login) // генерация jwt токена
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusBadGateway)

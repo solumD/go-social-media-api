@@ -15,6 +15,7 @@ var (
 	CurrentUsers = make(map[string]struct{}) // мапа с текущими пользователями
 )
 
+// Функция вносит нового пользователя в таблицу users
 func InsertUser(login, password string) error {
 	query := `insert into users(login, password) values (?, ?)`
 	data := []any{login, password}
@@ -25,6 +26,8 @@ func InsertUser(login, password string) error {
 	return nil
 }
 
+// Функция ищет пользователся в таблице users, и,
+// если находит, возвращает его пароль
 func SelectUser(login string) (string, error) {
 	type TempUser struct {
 		Login    string `json:"login"`
@@ -40,6 +43,7 @@ func SelectUser(login string) (string, error) {
 	return user.Password, nil
 }
 
+// Функция возвращает id пользователя из таблицы users
 func SelectUserId(login string) (int, error) {
 	type ID struct {
 		user_id int
@@ -54,7 +58,8 @@ func SelectUserId(login string) (int, error) {
 	return id.user_id, nil
 }
 
-func InserPost(user_id int, title, content, date string) error {
+// Функция вносит пост пользователя в таблицу posts
+func InsertPost(user_id int, title, content, date string) error {
 	query := `insert into posts(user_id, title, content, date_created) values (?, ?, ?, ?)`
 	data := []any{user_id, title, content, date}
 	if _, err := DBConn.Exec(query, data...); err != nil {
@@ -63,6 +68,7 @@ func InserPost(user_id int, title, content, date string) error {
 	return nil
 }
 
+// Структура Post
 type Post struct {
 	Login   string `json:"author"`
 	Title   string `json:"title"`
@@ -70,6 +76,7 @@ type Post struct {
 	Date    string `json:"created on"`
 }
 
+// Функция которая возвращает все посты конкретного пользователя
 func SelectUserPosts(login string) ([]Post, error) {
 	query := `select login, title, content, date_created from posts
 	inner join users
@@ -88,7 +95,7 @@ func SelectUserPosts(login string) ([]Post, error) {
 		if err := rows.Scan(&post.Login, &post.Title, &post.Content, &post.Date); err != nil {
 			return nil, err
 		}
-		post.Date = post.Date[0:10]
+		post.Date = post.Date[0:10] // обрезаем дату, чтобы отображались только день, месяц и год
 		posts = append(posts, post)
 	}
 

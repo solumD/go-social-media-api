@@ -14,11 +14,12 @@ import (
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/person"
 )
 
-// Хендлер домашней страницы
+// Главная страница
 func Feed(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("All News"))
 }
 
+// Создание поста с проверкой jwt токена
 func Create(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
 	claims, err := jwt.DecodeJWTToken(token)
@@ -55,6 +56,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Post created!"))
 }
 
+// Все посты конкретного пользователя
 func GetUserPosts(w http.ResponseWriter, r *http.Request) {
 	login := chi.URLParam(r, "user")
 	if len(login) == 0 {
@@ -76,6 +78,7 @@ func GetUserPosts(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(message))
 	}
 
+	// Создаем горутину для каждого поста и выводим его
 	var wg sync.WaitGroup
 	wg.Add(len(posts))
 	for _, v := range posts {

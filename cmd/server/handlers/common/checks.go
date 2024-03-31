@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Метод проверяет во время входа в аккаунт, существует ли пользователь с введенным логином
+// Фукнция проверяет во время входа в аккаунт, существует ли пользователь с введенным логином
 func CheckUserLogin(login, password string) error {
 	realPass, err := database.SelectUser(login)
 	if err == sql.ErrNoRows {
@@ -24,7 +24,7 @@ func CheckUserLogin(login, password string) error {
 	}
 }
 
-// Метод проверяет во время регистрации, существует ли пользователь с введенным логином
+// Функция проверяет во время регистрации, существует ли пользователь с введенным логином
 func CheckUserRegister(login string) (string, error) {
 	_, err := database.SelectUser(login)
 	if err == sql.ErrNoRows {

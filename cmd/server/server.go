@@ -11,6 +11,7 @@ import (
 	"github.com/solumD/go-social-media-api/cmd/server/handlers"
 )
 
+// инициализация базы данных и подключение к ней
 func initDataBase() {
 	var err error
 	database.DBConn, err = sql.Open("sqlite3", "news.db")

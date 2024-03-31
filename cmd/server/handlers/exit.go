@@ -9,6 +9,7 @@ import (
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/jwt"
 )
 
+// Выход пользователя из аккаунта по jwt токену
 func Exit(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
 	claims, err := jwt.DecodeJWTToken(token)

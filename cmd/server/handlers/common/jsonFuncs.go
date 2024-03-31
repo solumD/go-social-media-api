@@ -9,13 +9,14 @@ import (
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/person"
 )
 
+// Функция декодирует тело запроса и возвращает структуру User
 func UnmarshalBody(r *http.Request) (*person.User, error) {
 	var user person.User
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
-	if json.Valid(body) {
+	if json.Valid(body) { // проверка json на корректность
 		if err = json.Unmarshal(body, &user); err != nil {
 			return nil, err
 		}
@@ -25,13 +26,14 @@ func UnmarshalBody(r *http.Request) (*person.User, error) {
 	}
 }
 
+// Функция декодирует тело запроса и возвращает структуру Post
 func UnmarshalPost(r *http.Request) (*person.Post, error) {
 	var post person.Post
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
-	if json.Valid(body) {
+	if json.Valid(body) { // проверка json на корректность
 		if err = json.Unmarshal(body, &post); err != nil {
 			return nil, err
 		}
