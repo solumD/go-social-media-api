@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"sync"
 
 	"github.com/go-chi/chi/v5"
 	db "github.com/solumD/go-social-media-api/cmd/server/database"
@@ -16,7 +15,28 @@ import (
 
 // Главная страница
 func Feed(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("All News"))
+	posts, err := db.SelectLatestTenPosts()
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	message := "|  Latest posts  |\n"
+	w.Write([]byte(message))
+
+	// выводим последние 10 постов от пользователей
+	for _, v := range posts {
+		data, err := json.MarshalIndent(v, "", "\t")
+		if err != nil {
+			w.WriteHeader(http.StatusBadGateway)
+			http.Error(w, "Error in marshalling json", http.StatusBadGateway)
+			return
+		}
+		w.Write(data)
+	}
+
+	w.Header().Add("Content-Type", "application/json; charset = UTF-8")
 }
 
 // Создание поста с проверкой jwt токена
@@ -78,22 +98,16 @@ func GetUserPosts(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(message))
 	}
 
-	// Создаем горутину для каждого поста и выводим его
-	var wg sync.WaitGroup
-	wg.Add(len(posts))
+	// выводим все посты пользователя
 	for _, v := range posts {
-		go func(p db.Post) {
-			data, err := json.MarshalIndent(p, "", "\t")
-			if err != nil {
-				w.WriteHeader(http.StatusBadGateway)
-				http.Error(w, "Error in marshalling json", http.StatusBadGateway)
-				return
-			}
-			w.Write(data)
-			wg.Done()
-		}(v)
+		data, err := json.MarshalIndent(v, "", "\t")
+		if err != nil {
+			w.WriteHeader(http.StatusBadGateway)
+			http.Error(w, "Error in marshalling json", http.StatusBadGateway)
+			return
+		}
+		w.Write(data)
 	}
-	wg.Wait()
 
 	w.Header().Add("Content-Type", "application/json; charset = UTF-8")
 }
