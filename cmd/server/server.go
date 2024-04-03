@@ -33,10 +33,10 @@ func initHandlers(r *chi.Mux) {
 	r.Post(`/register`, handlers.Register)
 
 	// вход в аккаунт
-	r.Post(`/login`, handlers.Login)
+	r.Post(`/login`, handlers.LoginMiddleware(handlers.Login))
 
 	// выход из аккаунта
-	r.Post(`/exit`, handlers.Exit)
+	r.Post(`/exit`, handlers.ExitMiddleware(handlers.Exit))
 
 	// создание поста пользователем
 	r.Post(`/createpost`, handlers.Create)

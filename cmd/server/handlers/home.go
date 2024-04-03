@@ -39,6 +39,42 @@ func Feed(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json; charset = UTF-8")
 }
 
+// Все посты конкретного пользователя
+func GetUserPosts(w http.ResponseWriter, r *http.Request) {
+	login := chi.URLParam(r, "user")
+	if len(login) == 0 {
+		http.Error(w, "expected username after /user/", http.StatusBadRequest)
+		return
+	}
+	posts, err := db.SelectUserPosts(login)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if len(posts) == 0 {
+		message := fmt.Sprintf("%s hasn't post something yet :(", login)
+		w.Write([]byte(message))
+		return
+	} else {
+		message := fmt.Sprintf("|  %s's posts |\n\n", login)
+		w.Write([]byte(message))
+	}
+
+	// выводим все посты пользователя
+	for _, v := range posts {
+		data, err := json.MarshalIndent(v, "", "\t")
+		if err != nil {
+			w.WriteHeader(http.StatusBadGateway)
+			http.Error(w, "Error in marshalling json", http.StatusBadGateway)
+			return
+		}
+		w.Write(data)
+	}
+
+	w.Header().Add("Content-Type", "application/json; charset = UTF-8")
+}
+
 // Создание поста с проверкой jwt токена
 func Create(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
@@ -74,40 +110,4 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Post created!"))
-}
-
-// Все посты конкретного пользователя
-func GetUserPosts(w http.ResponseWriter, r *http.Request) {
-	login := chi.URLParam(r, "user")
-	if len(login) == 0 {
-		http.Error(w, "expected username after /user/", http.StatusBadRequest)
-		return
-	}
-	posts, err := db.SelectUserPosts(login)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if len(posts) == 0 {
-		message := fmt.Sprintf("%s hasn't post something yet :(", login)
-		w.Write([]byte(message))
-		return
-	} else {
-		message := fmt.Sprintf("|  %s's posts |\n\n", login)
-		w.Write([]byte(message))
-	}
-
-	// выводим все посты пользователя
-	for _, v := range posts {
-		data, err := json.MarshalIndent(v, "", "\t")
-		if err != nil {
-			w.WriteHeader(http.StatusBadGateway)
-			http.Error(w, "Error in marshalling json", http.StatusBadGateway)
-			return
-		}
-		w.Write(data)
-	}
-
-	w.Header().Add("Content-Type", "application/json; charset = UTF-8")
 }

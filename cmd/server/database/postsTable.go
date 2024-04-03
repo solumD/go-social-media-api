@@ -4,6 +4,14 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// Структура Post
+type Post struct {
+	Login   string `json:"author"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
+	Date    string `json:"created on"`
+}
+
 // Функция вносит пост пользователя в таблицу posts
 func InsertPost(user_id int, title, content, date string) error {
 	query := `insert into posts(user_id, title, content, date_created) values (?, ?, ?, ?)`
@@ -14,20 +22,13 @@ func InsertPost(user_id int, title, content, date string) error {
 	return nil
 }
 
-// Структура Post
-type Post struct {
-	Login   string `json:"author"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
-	Date    string `json:"created on"`
-}
-
 // Функция которая возвращает все посты конкретного пользователя
 func SelectUserPosts(login string) ([]Post, error) {
 	query := `select login, title, content, date_created from posts
 	inner join users
 	on users.id = posts.user_id
-	where login = ?`
+	where login = ?
+	order by posts.id desc`
 
 	rows, err := DBConn.Query(query, login)
 	if err != nil {
