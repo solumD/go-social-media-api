@@ -3,6 +3,7 @@ package common
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/solumD/go-social-media-api/cmd/server/database"
@@ -13,12 +14,13 @@ import (
 func CheckUserLogin(login, password string) error {
 	realPass, err := database.SelectUser(login)
 	if err == sql.ErrNoRows {
-		return errors.New("invalid login")
+		message := fmt.Sprintf("User %s doesn't exist!", login)
+		return errors.New(message)
 	} else if err != nil {
 		return err
 	} else {
 		if err = bcrypt.CompareHashAndPassword([]byte(realPass), []byte(password)); err != nil {
-			return err
+			return errors.New("invalid password")
 		}
 		return nil
 	}

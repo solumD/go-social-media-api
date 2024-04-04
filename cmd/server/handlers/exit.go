@@ -10,9 +10,11 @@ import (
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/jwt"
 )
 
+type ContextLogin string
+
 // Выход пользователя из аккаунта по jwt токену
 func Exit(w http.ResponseWriter, r *http.Request) {
-	currLogin := r.Context().Value("Login").(string) // получаем логин из контекста
+	currLogin := r.Context().Value(ContextLogin("Login")).(string) // получаем логин из контекста
 	if _, exist := db.CurrentUsers[currLogin]; !exist {
 		http.Error(w, "User is not authorized", http.StatusUnauthorized)
 		return
@@ -35,7 +37,8 @@ func ExitMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 		currLogin := claims["sub"].(string)
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, "Login", currLogin) // отправляем логин пользователя в контекст
+		tp := ContextLogin("Login")
+		ctx = context.WithValue(ctx, tp, currLogin) // отправляем логин пользователя в контекст
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 }

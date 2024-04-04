@@ -13,10 +13,12 @@ import (
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/person"
 )
 
+type ContextUser string // тип ключа в контексте
+
 // Вход пользователя в свой аккаунт
 func Login(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("User").(*person.User)   // получаем структуру User из контекста
-	userToken, err := jwt.GenerateJWTToken(user.Login) // генерация jwt токена
+	user := r.Context().Value(ContextUser("User")).(*person.User) // получаем структуру User из контекста
+	userToken, err := jwt.GenerateJWTToken(user.Login)            // генерация jwt токена
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -46,9 +48,7 @@ func LoginMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 		err = common.CheckUserLogin(user.Login, user.Password) // проверка, есть ли пользователь с введенным логином
-		if err == sql.ErrNoRows {
-			message = fmt.Sprintf("User %s doesn't exist!", user.Login) // в базе данных не найден пользователь с указанным логином
-			log.Println(message)
+		if err == sql.ErrNoRows {                              // в базе данных не найден пользователь с указанным логином
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		} else if err != nil { // ошибка во время исполнения запроса
@@ -57,7 +57,8 @@ func LoginMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		} else {
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, "User", user) // отправляем структуру User в контекст
+			tp := ContextUser("User")
+			ctx = context.WithValue(ctx, tp, user) // отправляем структуру User в контекст
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 	}

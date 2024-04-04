@@ -30,7 +30,7 @@ func initHandlers(r *chi.Mux) {
 	r.Get(`/feed`, handlers.Feed)
 
 	// регистрация
-	r.Post(`/register`, handlers.Register)
+	r.Post(`/register`, handlers.ReigsterMiddleware(handlers.Register))
 
 	// вход в аккаунт
 	r.Post(`/login`, handlers.LoginMiddleware(handlers.Login))
