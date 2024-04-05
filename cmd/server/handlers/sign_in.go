@@ -13,7 +13,8 @@ import (
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/person"
 )
 
-type ContextUser string // тип ключа в контексте
+type ContextUser string
+type UserBody string // тип ключа в контексте
 
 // Вход пользователя в свой аккаунт
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -32,23 +33,35 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// Middleware для проверки существования пользователя
-func LoginMiddleware(next http.HandlerFunc) http.HandlerFunc {
+// Middleware для декодирования json
+func LogUnmarhalMW(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		message := ""
 		user, err := common.UnmarshalBody(r)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		ctx := r.Context()
+		ub := UserBody("User")
+		ctx = context.WithValue(ctx, ub, user) // отправляем структуру User в контекст
+		next.ServeHTTP(w, r.WithContext(ctx))
+
+	}
+}
+
+// Middleware для проверки существования пользователя
+func LogCheckIfExistMW(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserBody("User")).(*person.User)
+		message := ""
 		if _, loggedIn := db.CurrentUsers[user.Login]; loggedIn { // проверка, выполнен вход или нет
 			message = fmt.Sprintf("%s already logged in!", user.Login)
 			w.Write([]byte(message))
 			return
 		}
-		err = common.CheckUserLogin(user.Login, user.Password) // проверка, есть ли пользователь с введенным логином
-		if err == sql.ErrNoRows {                              // в базе данных не найден пользователь с указанным логином
+		err := common.CheckUserLogin(user.Login, user.Password) // проверка, есть ли пользователь с введенным логином
+		if err == sql.ErrNoRows {                               // в базе данных не найден пользователь с указанным логином
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		} else if err != nil { // ошибка во время исполнения запроса

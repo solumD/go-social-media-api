@@ -39,8 +39,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(message))
 }
 
-// Middleware для проверки существования пользователя
-func ReigsterMiddleware(next http.HandlerFunc) http.HandlerFunc {
+// Middleware для декодирования json
+func RegUnmarhalMW(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := common.UnmarshalBody(r)
 		if err != nil {
@@ -48,6 +48,19 @@ func ReigsterMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		ctx := r.Context()
+		ub := UserBody("User")
+		ctx = context.WithValue(ctx, ub, user) // отправлка структуры User в контекст
+		next.ServeHTTP(w, r.WithContext(ctx))
+		log.Println("middleware 1")
+	}
+
+}
+
+// Middleware для проверки существования пользователя
+func RegCheckIfExistMW(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserBody("User")).(*person.User)
 		answer, err := common.CheckUserRegister(user.Login) // проверка, есть ли пользователем с введенным логином
 		if err != nil {
 			log.Println(err)
@@ -61,8 +74,9 @@ func ReigsterMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 		ctx := r.Context()
-		tp := ContextUser("User")
-		ctx = context.WithValue(ctx, tp, user) // отправлка структуры User в контекст
+		cu := ContextUser("User")
+		ctx = context.WithValue(ctx, cu, user) // отправлка структуры User в контекст
 		next.ServeHTTP(w, r.WithContext(ctx))
+		log.Println("middleware 2")
 	}
 }

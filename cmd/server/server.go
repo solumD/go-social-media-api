@@ -30,10 +30,10 @@ func initHandlers(r *chi.Mux) {
 	r.Get(`/feed`, handlers.Feed)
 
 	// регистрация
-	r.Post(`/register`, handlers.ReigsterMiddleware(handlers.Register))
+	r.Post(`/register`, handlers.RegUnmarhalMW(handlers.RegCheckIfExistMW(handlers.Register)))
 
 	// вход в аккаунт
-	r.Post(`/login`, handlers.LoginMiddleware(handlers.Login))
+	r.Post(`/login`, handlers.LogUnmarhalMW(handlers.LogCheckIfExistMW(handlers.Register)))
 
 	// выход из аккаунта
 	r.Post(`/exit`, handlers.ExitMiddleware(handlers.Exit))
