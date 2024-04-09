@@ -14,9 +14,9 @@ import (
 )
 
 // открытие базы данных и подключение к ней
-func initDataBase() {
+func initDataBase(cfg *config.Config) {
 	var err error
-	database.DBConn, err = sql.Open("sqlite3", "./cmd/server/database/news.db")
+	database.DBConn, err = sql.Open("sqlite3", cfg.DatabasePath)
 	if err != nil {
 		log.Println(err)
 		return
@@ -54,14 +54,7 @@ func main() {
 	// добавляем роутер
 	r := chi.NewRouter()
 
-	// инициализируем хендлеры к роутеру
-	initHandlers(r)
-
-	// инициализируем базу данных
-	initDataBase()
-	defer database.DBConn.Close()
-
-	//у становка переменной окружения
+	// установка переменной окружения
 	os.Setenv("CONFIG_PATH", "./config/local.yaml")
 
 	// создание конфига
@@ -73,6 +66,13 @@ func main() {
 		WriteTimeout: cfg.HTTPServer.Timeout,
 		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
 	}
+
+	// инициализируем базу данных
+	initDataBase(cfg)
+	defer database.DBConn.Close()
+
+	// инициализируем хендлеры к роутеру
+	initHandlers(r)
 
 	// запуск сервера
 	if err := srv.ListenAndServe(); err != nil {
