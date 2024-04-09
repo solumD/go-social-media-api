@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 
-	db "github.com/solumD/go-social-media-api/cmd/server/database"
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/jwt"
+	db "github.com/solumD/go-social-media-api/storage"
 )
 
 type ContextLogin string

@@ -8,20 +8,20 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/solumD/go-social-media-api/cmd/server/database"
 	"github.com/solumD/go-social-media-api/cmd/server/handlers"
 	"github.com/solumD/go-social-media-api/internal/config"
+	"github.com/solumD/go-social-media-api/storage"
 )
 
 // открытие базы данных и подключение к ней
 func initDataBase(cfg *config.Config) {
 	var err error
-	database.DBConn, err = sql.Open("sqlite3", cfg.DatabasePath)
+	storage.DBConn, err = sql.Open("sqlite3", cfg.DatabasePath)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	err = database.DBConn.Ping()
+	err = storage.DBConn.Ping()
 	if err != nil {
 		log.Println(err)
 		return
@@ -57,7 +57,7 @@ func main() {
 	// установка переменной окружения
 	os.Setenv("CONFIG_PATH", "./config/local.yaml")
 
-	// создание конфига
+	// инициализация конфига
 	cfg := config.MustLoad()
 	srv := &http.Server{
 		Addr:         cfg.Address,
@@ -69,7 +69,7 @@ func main() {
 
 	// инициализируем базу данных
 	initDataBase(cfg)
-	defer database.DBConn.Close()
+	defer storage.DBConn.Close()
 
 	// инициализируем хендлеры к роутеру
 	initHandlers(r)

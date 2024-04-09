@@ -2,7 +2,7 @@ package person
 
 import (
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/solumD/go-social-media-api/cmd/server/database"
+	db "github.com/solumD/go-social-media-api/storage"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -13,7 +13,7 @@ type User struct {
 
 // Метод создает пользователя и добавляет его в базу данных
 func (u User) CreateUser() error {
-	if err := database.InsertUser(u.Login, u.Password); err != nil {
+	if err := db.InsertUser(u.Login, u.Password); err != nil {
 		return err
 	}
 	return nil

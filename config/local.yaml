@@ -1,5 +1,5 @@
 env: "local"
-database_path: "./cmd/server/database/news.db"
+database_path: "./storage/news.db"
 http_server: 
   address: "localhost:8080"
   timeout: 5s

@@ -7,10 +7,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	db "github.com/solumD/go-social-media-api/cmd/server/database"
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/common"
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/jwt"
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/person"
+	db "github.com/solumD/go-social-media-api/storage"
 )
 
 // Главная страница

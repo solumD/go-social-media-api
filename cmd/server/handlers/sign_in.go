@@ -7,10 +7,10 @@ import (
 	"log"
 	"net/http"
 
-	db "github.com/solumD/go-social-media-api/cmd/server/database"
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/common"
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/jwt"
 	"github.com/solumD/go-social-media-api/cmd/server/handlers/person"
+	db "github.com/solumD/go-social-media-api/storage"
 )
 
 type ContextUser string

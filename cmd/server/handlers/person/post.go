@@ -3,7 +3,7 @@ package person
 import (
 	"time"
 
-	db "github.com/solumD/go-social-media-api/cmd/server/database"
+	db "github.com/solumD/go-social-media-api/storage"
 )
 
 // Структура Post
