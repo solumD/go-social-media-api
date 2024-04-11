@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/solumD/go-social-media-api/cmd/server/handlers/person"
+	"github.com/solumD/go-social-media-api/internal/server/handlers/person"
 )
 
 // Функция декодирует тело запроса и возвращает структуру User

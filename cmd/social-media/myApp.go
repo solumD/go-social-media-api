@@ -8,8 +8,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/solumD/go-social-media-api/cmd/server/handlers"
 	"github.com/solumD/go-social-media-api/internal/config"
+	h "github.com/solumD/go-social-media-api/internal/server/handlers/authorization"
+	f "github.com/solumD/go-social-media-api/internal/server/handlers/feed"
 	"github.com/solumD/go-social-media-api/storage"
 )
 
@@ -32,22 +33,22 @@ func initDataBase(cfg *config.Config) {
 // инициализация хендлеров
 func initHandlers(r *chi.Mux) {
 	// домашняя страница
-	r.Get(`/feed`, handlers.Feed)
+	r.Get(`/feed`, f.Feed)
 
 	// регистрация
-	r.Post(`/register`, handlers.RegUnmarhalMW(handlers.RegCheckIfExistMW(handlers.Register)))
+	r.Post(`/register`, h.RegUnmarhalMW(h.RegCheckIfExistMW(h.Register)))
 
 	// вход в аккаунт
-	r.Post(`/login`, handlers.LogUnmarhalMW(handlers.LogCheckIfExistMW(handlers.Register)))
+	r.Post(`/login`, h.LogUnmarhalMW(h.LogCheckIfExistMW(h.Register)))
 
 	// выход из аккаунта
-	r.Post(`/exit`, handlers.ExitMiddleware(handlers.Exit))
+	r.Post(`/exit`, h.ExitMiddleware(h.Exit))
 
 	// создание поста пользователем
-	r.Post(`/createpost`, handlers.Create)
+	r.Post(`/createpost`, f.Create)
 
 	// вывод всех постов конкретного пользователя
-	r.Get("/users/{user}", handlers.GetUserPosts)
+	r.Get("/users/{user}", f.GetUserPosts)
 }
 
 func main() {

@@ -1,4 +1,4 @@
-package handlers
+package feed
 
 import (
 	"encoding/json"
@@ -7,9 +7,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/solumD/go-social-media-api/cmd/server/handlers/common"
-	"github.com/solumD/go-social-media-api/cmd/server/handlers/jwt"
-	"github.com/solumD/go-social-media-api/cmd/server/handlers/person"
+	"github.com/solumD/go-social-media-api/internal/server/handlers/common"
+	"github.com/solumD/go-social-media-api/internal/server/handlers/jwt"
+	"github.com/solumD/go-social-media-api/internal/server/handlers/person"
 	db "github.com/solumD/go-social-media-api/storage"
 )
 
