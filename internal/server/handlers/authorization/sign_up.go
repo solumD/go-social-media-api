@@ -14,45 +14,52 @@ import (
 
 // Регистрация пользователя
 func Register(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value(ContextUser("User")).(*person.User) // получаем струтуру User из контекста =
+	w.Header().Set("Content-Type", "application/json; charset = UTF-8")
+	user := r.Context().Value(ContextUser("User")).(*person.User) // получаем струтуру User из контекста
 	if err := user.EncryptPassword(); err != nil {                // шифрование пароля
 		log.Println(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		resp := fmt.Sprintf(`{"error":"%s"}`, err)
+		http.Error(w, resp, http.StatusBadRequest)
 		return
 	}
 	err := user.CreateUser() // создание нового пользователя
 	if err != nil {
 		log.Println(err)
-		http.Error(w, err.Error(), http.StatusBadGateway)
+		resp := fmt.Sprintf(`{"error":"%s"}`, err)
+		http.Error(w, resp, http.StatusBadGateway)
 		return
 	}
 	userToken, err := jwt.GenerateJWTToken(user.Login) // генерация jwt токена
 	if err != nil {
 		log.Println(err)
-		http.Error(w, err.Error(), http.StatusBadGateway)
+		resp := fmt.Sprintf(`{"error":"%s"}`, err)
+		http.Error(w, resp, http.StatusBadGateway)
 		return
 	}
-	db.CurrentUsers[user.Login] = struct{}{}
-	message := fmt.Sprintf("Welcome, %s!\nYour jwt-token: %s\nDon't lose it!", user.Login, userToken) // выполнен вход в аккаунт, человек добавляется в список текущик пользователей
-	log.Println(db.CurrentUsers)
+
+	resp := fmt.Sprintf(`{"login":"%s", "jwt-token":"%s"}`, user.Login, userToken)
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(message))
+	w.Write([]byte(resp))
+
+	db.CurrentUsers[user.Login] = struct{}{} // выполнена регистрация, человек добавляется в список текущих пользователей
+	log.Println(db.CurrentUsers)
 }
 
 // Middleware для декодирования json
 func RegUnmarhalMW(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset = UTF-8")
 		user, err := common.UnmarshalBody(r)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			resp := fmt.Sprintf(`{"error":"%s"}`, err)
+			http.Error(w, resp, http.StatusBadRequest)
 			return
 		}
 		ctx := r.Context()
 		ub := UserBody("User")
 		ctx = context.WithValue(ctx, ub, user) // отправлка структуры User в контекст
 		next.ServeHTTP(w, r.WithContext(ctx))
-		log.Println("middleware 1")
 	}
 
 }
@@ -60,23 +67,24 @@ func RegUnmarhalMW(next http.HandlerFunc) http.HandlerFunc {
 // Middleware для проверки существования пользователя
 func RegCheckIfExistMW(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset = UTF-8")
 		user := r.Context().Value(UserBody("User")).(*person.User)
 		answer, err := common.CheckUserRegister(user.Login) // проверка, есть ли пользователем с введенным логином
 		if err != nil {
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusNotAcceptable)
+			resp := fmt.Sprintf(`{"error":"%s"}`, err)
+			http.Error(w, resp, http.StatusNotAcceptable)
 			return
 		}
 		if answer == "exists" { // если answer == exists, то пользователь уже есть, отмена операции
-			message := fmt.Sprintf("User %s already exists!", user.Login)
-			w.WriteHeader(http.StatusNotAcceptable)
-			w.Write([]byte(message))
+			resp := fmt.Sprintf(`{"message": "user %s already exist"}`, user.Login)
+			log.Println(resp)
+			w.Write([]byte(resp))
 			return
 		}
 		ctx := r.Context()
 		cu := ContextUser("User")
 		ctx = context.WithValue(ctx, cu, user) // отправлка структуры User в контекст
 		next.ServeHTTP(w, r.WithContext(ctx))
-		log.Println("middleware 2")
 	}
 }

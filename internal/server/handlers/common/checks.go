@@ -3,7 +3,6 @@ package common
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
 	db "github.com/solumD/go-social-media-api/storage"
@@ -14,8 +13,7 @@ import (
 func CheckUserLogin(login, password string) error {
 	realPass, err := db.SelectUser(login)
 	if err == sql.ErrNoRows {
-		message := fmt.Sprintf("User %s doesn't exist!", login)
-		return errors.New(message)
+		return errors.New(`user doesn't exist`)
 	} else if err != nil {
 		return err
 	} else {

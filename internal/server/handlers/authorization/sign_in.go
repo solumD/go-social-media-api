@@ -18,55 +18,66 @@ type UserBody string // тип ключа в контексте
 
 // Вход пользователя в свой аккаунт
 func Login(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset = UTF-8")
 	user := r.Context().Value(ContextUser("User")).(*person.User) // получаем структуру User из контекста
 	userToken, err := jwt.GenerateJWTToken(user.Login)            // генерация jwt токена
+
 	if err != nil {
 		log.Println(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		resp := fmt.Sprintf(`{"error":"%s"}`, err)
+		http.Error(w, resp, http.StatusBadRequest)
 		return
 	}
-	message := fmt.Sprintf("Welcome Back, %s!\nYour jwt-token: %s\nDon't lose it!", user.Login, userToken)
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(message))
-	db.CurrentUsers[user.Login] = struct{}{} // выполнен вход в аккаунт, человек добавляется в список текущик пользователе
-	log.Println(db.CurrentUsers)
 
+	resp := fmt.Sprintf(`{"login":"%s", "jwt-token":"%s"}`, user.Login, userToken)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(resp))
+
+	db.CurrentUsers[user.Login] = struct{}{} // выполнен вход в аккаунт, человек добавляется в список текущих пользователей
+	log.Println(db.CurrentUsers)
 }
 
 // Middleware для декодирования json
 func LogUnmarhalMW(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset = UTF-8")
 		user, err := common.UnmarshalBody(r)
+
 		if err != nil {
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			resp := fmt.Sprintf(`{"error":"%s"}`, err)
+			http.Error(w, resp, http.StatusBadRequest)
 			return
 		}
+
 		ctx := r.Context()
 		ub := UserBody("User")
 		ctx = context.WithValue(ctx, ub, user) // отправляем структуру User в контекст
 		next.ServeHTTP(w, r.WithContext(ctx))
-
 	}
 }
 
 // Middleware для проверки существования пользователя
 func LogCheckIfExistMW(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset = UTF-8")
 		user := r.Context().Value(UserBody("User")).(*person.User)
-		message := ""
 		if _, loggedIn := db.CurrentUsers[user.Login]; loggedIn { // проверка, выполнен вход или нет
-			message = fmt.Sprintf("%s already logged in!", user.Login)
-			w.Write([]byte(message))
+			resp := fmt.Sprintf(`{"error": "user %s already logged in!"}`, user.Login)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(resp))
 			return
 		}
 		err := common.CheckUserLogin(user.Login, user.Password) // проверка, есть ли пользователь с введенным логином
 		if err == sql.ErrNoRows {                               // в базе данных не найден пользователь с указанным логином
-			http.Error(w, err.Error(), http.StatusNotFound)
+			log.Println(err)
+			resp := fmt.Sprintf(`{"error":"%s"}`, err)
+			http.Error(w, resp, http.StatusNotFound)
 			return
 		} else if err != nil { // ошибка во время исполнения запроса
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			resp := fmt.Sprintf(`{"error":"%s"}`, err)
+			http.Error(w, resp, http.StatusBadRequest)
 			return
 		} else {
 			ctx := r.Context()

@@ -39,7 +39,7 @@ func initHandlers(r *chi.Mux) {
 	r.Post(`/register`, h.RegUnmarhalMW(h.RegCheckIfExistMW(h.Register)))
 
 	// вход в аккаунт
-	r.Post(`/login`, h.LogUnmarhalMW(h.LogCheckIfExistMW(h.Register)))
+	r.Post(`/login`, h.LogUnmarhalMW(h.LogCheckIfExistMW(h.Login)))
 
 	// выход из аккаунта
 	r.Post(`/exit`, h.ExitMiddleware(h.Exit))
