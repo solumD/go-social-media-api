@@ -29,8 +29,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := fmt.Sprintf(`{"login":"%s", "jwt-token":"%s"}`, user.Login, userToken)
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("JWT-Token", userToken)
+	resp := fmt.Sprintf(`{"login":"%s"}`, user.Login)
 	w.Write([]byte(resp))
 
 	db.CurrentUsers[user.Login] = struct{}{} // выполнен вход в аккаунт, человек добавляется в список текущих пользователей
@@ -42,7 +43,6 @@ func LogUnmarhalMW(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset = UTF-8")
 		user, err := common.UnmarshalBody(r)
-
 		if err != nil {
 			log.Println(err)
 			resp := fmt.Sprintf(`{"error":"%s"}`, err)
@@ -68,7 +68,7 @@ func LogCheckIfExistMW(next http.HandlerFunc) http.HandlerFunc {
 			w.Write([]byte(resp))
 			return
 		}
-		err := common.CheckUserLogin(user.Login, user.Password) // проверка, есть ли пользователь с введенным логином
+		err := common.CheckUserLogin(user.Login, user.Password) // проверка на существование пользователя и соответствие введенного пароля
 		if err == sql.ErrNoRows {                               // в базе данных не найден пользователь с указанным логином
 			log.Println(err)
 			resp := fmt.Sprintf(`{"error":"%s"}`, err)
@@ -76,8 +76,8 @@ func LogCheckIfExistMW(next http.HandlerFunc) http.HandlerFunc {
 			return
 		} else if err != nil { // ошибка во время исполнения запроса
 			log.Println(err)
-			resp := fmt.Sprintf(`{"error":"%s"}`, err)
-			http.Error(w, resp, http.StatusBadRequest)
+			resp := fmt.Errorf(`{"error":"%s"}`, err)
+			http.Error(w, resp.Error(), http.StatusBadRequest)
 			return
 		} else {
 			ctx := r.Context()

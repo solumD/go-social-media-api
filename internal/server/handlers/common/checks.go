@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Фукнция проверяет во время входа в аккаунт, существует ли пользователь с введенным логином
+// Фукнция проверяет во время входа в аккаунт, существует ли пользователь с введенным логином. Если существует то проверяет соответствие паролей
 func CheckUserLogin(login, password string) error {
 	realPass, err := db.SelectUser(login)
 	if err == sql.ErrNoRows {
@@ -18,7 +18,7 @@ func CheckUserLogin(login, password string) error {
 		return err
 	} else {
 		if err = bcrypt.CompareHashAndPassword([]byte(realPass), []byte(password)); err != nil {
-			return errors.New("invalid password")
+			return errors.New(`invalid password`)
 		}
 		return nil
 	}

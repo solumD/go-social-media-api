@@ -37,8 +37,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := fmt.Sprintf(`{"login":"%s", "jwt-token":"%s"}`, user.Login, userToken)
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("JWT-Token", userToken)
+	resp := fmt.Sprintf(`{"login":"%s"}`, user.Login)
 	w.Write([]byte(resp))
 
 	db.CurrentUsers[user.Login] = struct{}{} // выполнена регистрация, человек добавляется в список текущих пользователей
