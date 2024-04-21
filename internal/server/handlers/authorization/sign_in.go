@@ -29,8 +29,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("JWT-Token", userToken)
+	w.WriteHeader(http.StatusOK)
 	resp := fmt.Sprintf(`{"login":"%s"}`, user.Login)
 	w.Write([]byte(resp))
 

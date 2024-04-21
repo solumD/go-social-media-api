@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	db "github.com/solumD/go-social-media-api/storage"
 )
 
 func TestLogin(t *testing.T) {
@@ -16,24 +18,43 @@ func TestLogin(t *testing.T) {
 		expextedBody       string
 	}{
 		{
-			reqBody:            []byte(`{"login":"sassyaba","password":"yesnoyes"}`),
+			name:               "Login OK",
+			reqBody:            []byte(`{"login":"test","password":"password"}`),
 			expectedStatusCode: http.StatusOK,
-			expextedBody:       `{"login":"sassyaba"}`,
+			expextedBody:       `{"login":"test"}`,
 		},
 		{
-			reqBody:            []byte(`{"login":"prince","password":"12345"}`),
+			name:               "Login in the same account",
+			reqBody:            []byte(`{"login":"test","password":"password"}`),
+			expectedStatusCode: http.StatusBadRequest,
+			expextedBody:       `{"error": "user test already logged in!"}`,
+		},
+		{
+			name:               "Invalid password",
+			reqBody:            []byte(`{"login":"user","password":"123"}`),
 			expectedStatusCode: http.StatusBadRequest,
 			expextedBody:       `{"error":"invalid password"}`,
 		},
+		{
+			name:               "Invalid json login input",
+			reqBody:            []byte(`{"login":"test,"password":"password"}`),
+			expectedStatusCode: http.StatusBadRequest,
+			expextedBody:       `{"error":"invalid json User Input"}`,
+		},
+		{
+			name:               "Invalid json password input",
+			reqBody:            []byte(`{"login":"test","password":"password}`),
+			expectedStatusCode: http.StatusBadRequest,
+			expextedBody:       `{"error":"invalid json User Input"}`,
+		},
 	}
-
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Logf("Calling request: %s", testCase.reqBody)
 			req, _ := http.NewRequest(http.MethodPost, "http://localhost:8080/login", bytes.NewBuffer(testCase.reqBody))
 			resp, _ := http.DefaultClient.Do(req)
 			body, _ := io.ReadAll(resp.Body)
-
+			Clear()
 			if strings.TrimSpace(string(body)) != testCase.expextedBody {
 				t.Errorf("Incorrect result. Expexted %s, got %s", testCase.expextedBody, strings.TrimSpace(string(body)))
 			}
@@ -42,4 +63,8 @@ func TestLogin(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Clear() {
+	delete(db.CurrentUsers, "test")
 }
