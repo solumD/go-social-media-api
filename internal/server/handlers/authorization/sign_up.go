@@ -16,7 +16,8 @@ import (
 func Register(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset = UTF-8")
 	user := r.Context().Value(ContextUser("User")).(*person.User) // получаем струтуру User из контекста
-	if err := user.EncryptPassword(); err != nil {                // шифрование пароля
+
+	if err := user.EncryptPassword(); err != nil { // шифрование пароля
 		log.Println(err)
 		resp := fmt.Sprintf(`{"error":"%s"}`, err)
 		http.Error(w, resp, http.StatusBadRequest)
@@ -29,6 +30,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, resp, http.StatusBadGateway)
 		return
 	}
+
 	userToken, err := jwt.GenerateJWTToken(user.Login) // генерация jwt токена
 	if err != nil {
 		log.Println(err)
@@ -50,6 +52,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 func RegUnmarhalMW(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset = UTF-8")
+
 		user, err := common.UnmarshalBody(r)
 		if err != nil {
 			log.Println(err)
@@ -57,6 +60,7 @@ func RegUnmarhalMW(next http.HandlerFunc) http.HandlerFunc {
 			http.Error(w, resp, http.StatusBadRequest)
 			return
 		}
+
 		ctx := r.Context()
 		ub := UserBody("User")
 		ctx = context.WithValue(ctx, ub, user) // отправлка структуры User в контекст
@@ -70,6 +74,7 @@ func RegCheckIfExistMW(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset = UTF-8")
 		user := r.Context().Value(UserBody("User")).(*person.User)
+
 		answer, err := common.CheckUserRegister(user.Login) // проверка, есть ли пользователем с введенным логином
 		if err != nil {
 			log.Println(err)
@@ -77,12 +82,14 @@ func RegCheckIfExistMW(next http.HandlerFunc) http.HandlerFunc {
 			http.Error(w, resp, http.StatusNotAcceptable)
 			return
 		}
+
 		if answer == "exists" { // если answer == exists, то пользователь уже есть, отмена операции
 			resp := fmt.Sprintf(`{"message": "user %s already exist"}`, user.Login)
 			log.Println(resp)
 			w.Write([]byte(resp))
 			return
 		}
+
 		ctx := r.Context()
 		cu := ContextUser("User")
 		ctx = context.WithValue(ctx, cu, user) // отправлка структуры User в контекст

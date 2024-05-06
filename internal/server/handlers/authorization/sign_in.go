@@ -43,6 +43,7 @@ func LogUnmarhalMW(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset = UTF-8")
 		user, err := common.UnmarshalBody(r)
+
 		if err != nil {
 			log.Println(err)
 			resp := fmt.Sprintf(`{"error":"%s"}`, err)
@@ -62,12 +63,14 @@ func LogCheckIfExistMW(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset = UTF-8")
 		user := r.Context().Value(UserBody("User")).(*person.User)
+
 		if _, loggedIn := db.CurrentUsers[user.Login]; loggedIn { // проверка, выполнен вход или нет
 			resp := fmt.Sprintf(`{"error": "user %s already logged in!"}`, user.Login)
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(resp))
 			return
 		}
+
 		err := common.CheckUserLogin(user.Login, user.Password) // проверка на существование пользователя и соответствие введенного пароля
 		if err == sql.ErrNoRows {                               // в базе данных не найден пользователь с указанным логином
 			log.Println(err)

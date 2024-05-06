@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-
-	db "github.com/solumD/go-social-media-api/storage"
 )
 
 func TestLogin(t *testing.T) {
@@ -54,7 +52,6 @@ func TestLogin(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodPost, "http://localhost:8080/login", bytes.NewBuffer(testCase.reqBody))
 			resp, _ := http.DefaultClient.Do(req)
 			body, _ := io.ReadAll(resp.Body)
-			Clear()
 			if strings.TrimSpace(string(body)) != testCase.expextedBody {
 				t.Errorf("Incorrect result. Expexted %s, got %s", testCase.expextedBody, strings.TrimSpace(string(body)))
 			}
@@ -65,6 +62,3 @@ func TestLogin(t *testing.T) {
 	}
 }
 
-func Clear() {
-	delete(db.CurrentUsers, "test")
-}

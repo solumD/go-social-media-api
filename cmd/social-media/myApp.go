@@ -15,19 +15,18 @@ import (
 )
 
 // открытие базы данных и подключение к ней
-func initDataBase(cfg *config.Config) {
+func initDataBase(cfg *config.Config) error {
 	var err error
 	storage.DBConn, err = sql.Open("sqlite3", cfg.DatabasePath)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 	err = storage.DBConn.Ping()
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
-	log.Println("✓ connected to books db")
+	log.Println("✓ connected to news db")
+	return nil
 }
 
 // инициализация хендлеров
@@ -52,14 +51,17 @@ func initHandlers(r *chi.Mux) {
 }
 
 func main() {
-	// добавляем роутер
+
+	// инициализируем роутер
 	r := chi.NewRouter()
 
-	// установка переменной окружения
+	// установка пути к конфигу в переменную CONFIG_PATH
 	os.Setenv("CONFIG_PATH", "./config/local.yaml")
 
 	// инициализация конфига
 	cfg := config.MustLoad()
+
+	// инициализация сервера
 	srv := &http.Server{
 		Addr:         cfg.Address,
 		Handler:      r,
@@ -68,17 +70,18 @@ func main() {
 		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
 	}
 
-	// инициализируем базу данных
-	initDataBase(cfg)
+	// инициализация базы данных
+	if err := initDataBase(cfg); err != nil {
+		log.Fatal(err)
+	}
 	defer storage.DBConn.Close()
 
-	// инициализируем хендлеры к роутеру
+	// инициализация хендлеров роутера
 	initHandlers(r)
 
 	// запуск сервера
+	log.Printf("Starting server at %s", srv.Addr)
 	if err := srv.ListenAndServe(); err != nil {
-		log.Print(err)
+		log.Fatal(err)
 	}
-
-	log.Fatal("server closed")
 }

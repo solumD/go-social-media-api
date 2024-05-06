@@ -22,6 +22,7 @@ func Exit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"user is not authorized"}`, http.StatusUnauthorized)
 		return
 	}
+
 	delete(db.CurrentUsers, currLogin)
 	log.Println(db.CurrentUsers)
 	message := fmt.Sprintf(`{"message":"see you soon, %s"}`, currLogin)
@@ -40,6 +41,7 @@ func ExitMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			http.Error(w, `{"error":"invalid jwt-token, exit denied"}`, http.StatusBadRequest)
 			return
 		}
+
 		currLogin := claims["sub"].(string)
 		ctx := r.Context()
 		tp := ContextLogin("Login")
