@@ -8,9 +8,8 @@ This is my pet-project made with [Chi](https://github.com/go-chi/chi/) and [SQLi
 
 ## Installation
 ```bash
- mkdir go-social-media-api
+ git clone git@github.com:solumD/go-social-media-api.git
  cd go-social-media-api
- it clone git@github.com:solumD/go-social-media-api.git
 ```
 
 #### Starting server 
