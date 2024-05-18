@@ -1,6 +1,7 @@
 package feed
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -39,11 +40,16 @@ func Feed(w http.ResponseWriter, r *http.Request) {
 // Все посты конкретного пользователя
 func GetUserPosts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset = UTF-8")
-
 	login := chi.URLParam(r, "user")
 	if len(login) == 0 {
 		log.Printf(`error:expected username after /user/`)
 		http.Error(w, `{"error":"expected username after /user/"}`, http.StatusBadRequest)
+		return
+	}
+	_, err := db.SelectUserId(login)
+	if err == sql.ErrNoRows {
+		log.Printf(`error: user doesn't exist`)
+		http.Error(w, `{"error":"user doesn't exist"}`, http.StatusBadRequest)
 		return
 	}
 	posts, err := db.SelectUserPosts(login)
@@ -81,7 +87,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	claims, err := jwt.DecodeJWTToken(token)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, `{"error":"invalid jwt token, creation denied"}`, http.StatusUnauthorized)
+		http.Error(w, `{"error":"invalid jwt token, access denied"}`, http.StatusUnauthorized)
 		return
 	}
 	login := claims["sub"].(string)
@@ -113,4 +119,47 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(`{"message":"post created"}`))
+}
+
+// Удаление поста по его id
+func Delete(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset = UTF-8")
+	token := r.Header.Get("Authorization")
+	claims, err := jwt.DecodeJWTToken(token)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, `{"error":"invalid jwt token, access denied"}`, http.StatusUnauthorized)
+		return
+	}
+	login := claims["sub"].(string)
+	id, err := common.UnmarshalId(r)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	postLogin, err := db.SelectPostLogin(id) // смотрим, кому принадлежит пост
+	if err == sql.ErrNoRows {
+		log.Printf(`error: post doesn't exist`)
+		http.Error(w, `{"error":"post doesn't exist"}`, http.StatusBadRequest)
+		return
+	} else if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if login != postLogin { // проверяем, совпадает ли логин автора поста с логином отправителя запроса в jwt-токене
+		log.Println("error: invalid user, access denied")
+		http.Error(w, `{"error":"invalid user, access denied"}`, http.StatusBadRequest)
+		return
+	}
+	err = db.DeletePost(id) // удаляем пост
+	if err == sql.ErrNoRows {
+		log.Println(err)
+		resp := fmt.Sprintf(`{"error":"%s"}`, err)
+		http.Error(w, resp, http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+	w.Write([]byte(`{"message":"post deleted"}`))
 }

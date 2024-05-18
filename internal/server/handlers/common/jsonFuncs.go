@@ -42,3 +42,23 @@ func UnmarshalPost(r *http.Request) (*person.Post, error) {
 		return nil, errors.New("invalid json Post Input")
 	}
 }
+
+// Функция декодирует id возвращает его
+func UnmarshalId(r *http.Request) (string, error) {
+	type Id struct {
+		Id string `json:"id"`
+	}
+	var id Id
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return "", err
+	}
+	if json.Valid(body) { // проверка json на корректность
+		if err = json.Unmarshal(body, &id); err != nil {
+			return "", err
+		}
+		return id.Id, nil
+	} else {
+		return "", errors.New("invalid json Id Input")
+	}
+}

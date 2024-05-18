@@ -48,6 +48,9 @@ func initHandlers(r *chi.Mux) {
 
 	// вывод всех постов конкретного пользователя
 	r.Get("/users/{user}", f.GetUserPosts)
+
+	// удаление поста
+	r.Post("/deletepost", f.Delete)
 }
 
 func main() {

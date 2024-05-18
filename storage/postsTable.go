@@ -6,6 +6,7 @@ import (
 
 // Структура Post
 type Post struct {
+	Id      string `json:"id"`
 	Login   string `json:"author"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
@@ -24,7 +25,7 @@ func InsertPost(user_id int, title, content, date string) error {
 
 // Функция которая возвращает все посты конкретного пользователя
 func SelectUserPosts(login string) ([]Post, error) {
-	query := `select login, title, content, date_created from posts
+	query := `select posts.id, login, title, content, date_created from posts
 	inner join users
 	on users.id = posts.user_id
 	where login = ?
@@ -39,7 +40,7 @@ func SelectUserPosts(login string) ([]Post, error) {
 	posts := []Post{}
 	for rows.Next() {
 		var post Post
-		if err := rows.Scan(&post.Login, &post.Title, &post.Content, &post.Date); err != nil {
+		if err := rows.Scan(&post.Id, &post.Login, &post.Title, &post.Content, &post.Date); err != nil {
 			return nil, err
 		}
 		post.Date = post.Date[0:10] // обрезаем дату, чтобы отображались только день, месяц и год
@@ -49,12 +50,12 @@ func SelectUserPosts(login string) ([]Post, error) {
 	return posts, nil
 }
 
+// Функция возвращает последние 10 постов от всех пользователей
 func SelectLatestTenPosts() ([]Post, error) {
-	query := `select login, title, content, date_created from posts
+	query := `select posts.id, login, title, content, date_created from posts
 	join users on users.id = posts.user_id
 	order by posts.id desc
 	limit 0, 5;`
-
 	rows, err := DBConn.Query(query)
 	if err != nil {
 		return nil, err
@@ -63,11 +64,36 @@ func SelectLatestTenPosts() ([]Post, error) {
 	posts := []Post{}
 	for rows.Next() {
 		var post Post
-		if err := rows.Scan(&post.Login, &post.Title, &post.Content, &post.Date); err != nil {
+		if err := rows.Scan(&post.Id, &post.Login, &post.Title, &post.Content, &post.Date); err != nil {
 			return nil, err
 		}
 		post.Date = post.Date[0:10] // обрезаем дату, чтобы отображались только день, месяц и год
 		posts = append(posts, post)
 	}
 	return posts, nil
+}
+
+// Функция возвращает логин пользователя, которому принадлежит пост
+func SelectPostLogin(postId string) (string, error) {
+	query := `select login from posts inner join users on users.id = posts.user_id where posts.id = ?`
+	row := DBConn.QueryRow(query, postId)
+	type UserLogin struct {
+		login string
+	}
+	var userLogin UserLogin
+	err := row.Scan(&userLogin.login)
+	if err != nil {
+		return "0", err
+	}
+	return userLogin.login, nil
+}
+
+// Функция удаляет пост пользователя по id
+func DeletePost(postId string) error {
+	query := `delete from posts where id = ?`
+	_, err := DBConn.Exec(query, postId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

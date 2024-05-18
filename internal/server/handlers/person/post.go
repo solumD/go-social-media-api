@@ -8,6 +8,7 @@ import (
 
 // Структура Post
 type Post struct {
+	Id      string `json:"id"`
 	Login   string `json:"user"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
