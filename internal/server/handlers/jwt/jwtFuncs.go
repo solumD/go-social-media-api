@@ -16,8 +16,8 @@ var (
 // Функция генерирует jwt-токен и возвращает его
 func GenerateJWTToken(login string) (string, error) {
 	payload := jwt.MapClaims{
-		"sub": login,                                 // логин передается в payload
-		"exp": time.Now().Add(time.Hour * 48).Unix(), // срок действия токена
+		"sub": login,                                // логин передается в payload
+		"exp": time.Now().Add(time.Hour * 4).Unix(), // срок действия токена
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
 	t, err := token.SignedString(jwtSecret) // подписываем токен

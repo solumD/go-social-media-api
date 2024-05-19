@@ -55,7 +55,7 @@ func SelectLatestTenPosts() ([]Post, error) {
 	query := `select posts.id, login, title, content, date_created from posts
 	join users on users.id = posts.user_id
 	order by posts.id desc
-	limit 0, 5;`
+	limit 0, 10;`
 	rows, err := DBConn.Query(query)
 	if err != nil {
 		return nil, err

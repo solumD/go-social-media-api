@@ -31,9 +31,6 @@ func initDataBase(cfg *config.Config) error {
 
 // инициализация хендлеров
 func initHandlers(r *chi.Mux) {
-	// домашняя страница
-	r.Get(`/feed`, f.Feed)
-
 	// регистрация
 	r.Post(`/register`, h.RegUnmarhalMW(h.RegCheckIfExistMW(h.Register)))
 
@@ -43,14 +40,17 @@ func initHandlers(r *chi.Mux) {
 	// выход из аккаунта
 	r.Post(`/exit`, h.ExitMiddleware(h.Exit))
 
+	// домашняя страница
+	r.Get(`/feed`, f.Feed)
+
 	// создание поста пользователем
-	r.Post(`/createpost`, f.Create)
+	r.Post(`/createpost`, f.CreatePost)
 
 	// вывод всех постов конкретного пользователя
 	r.Get("/users/{user}", f.GetUserPosts)
 
 	// удаление поста
-	r.Post("/deletepost", f.Delete)
+	r.Post("/deletepost", f.DeletePost)
 }
 
 func main() {

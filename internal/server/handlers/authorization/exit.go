@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/solumD/go-social-media-api/internal/server/handlers/jwt"
 	db "github.com/solumD/go-social-media-api/storage"
@@ -34,8 +35,9 @@ func ExitMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset = UTF-8")
 
-		token := r.Header.Get("Authorization")
-		claims, err := jwt.DecodeJWTToken(token)
+		auth := r.Header.Get("Authorization")
+		bearerAndToken := strings.Split(auth, " ")
+		claims, err := jwt.DecodeJWTToken(bearerAndToken[1])
 		if err != nil {
 			log.Println(err)
 			http.Error(w, `{"error":"invalid jwt-token, exit denied"}`, http.StatusBadRequest)

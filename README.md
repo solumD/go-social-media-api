@@ -26,8 +26,6 @@ This is my pet-project made with [Chi](https://github.com/go-chi/chi/) and [SQLi
 ```
 ## Endpoints Demonstration
 
-### /feed
-
 ### /register
 
 ### /login
@@ -36,4 +34,8 @@ This is my pet-project made with [Chi](https://github.com/go-chi/chi/) and [SQLi
 
 ### /createpost
 
+### /deletepost
+
 ### /users/{username}
+
+### /feed

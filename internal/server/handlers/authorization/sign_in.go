@@ -29,9 +29,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("JWT-Token", userToken)
 	w.WriteHeader(http.StatusOK)
-	resp := fmt.Sprintf(`{"login":"%s"}`, user.Login)
+	resp := fmt.Sprintf(`{"token":"%s"}`, userToken)
 	w.Write([]byte(resp))
 
 	db.CurrentUsers[user.Login] = struct{}{} // выполнен вход в аккаунт, человек добавляется в список текущих пользователей
