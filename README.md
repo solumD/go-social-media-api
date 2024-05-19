@@ -10,6 +10,7 @@ This is my pet-project made with [Chi](https://github.com/go-chi/chi/) and [SQLi
 ```bash
  git clone git@github.com:solumD/go-social-media-api.git
  cd go-social-media-api
+ go mod tidy
 ```
 
 #### Starting server 
