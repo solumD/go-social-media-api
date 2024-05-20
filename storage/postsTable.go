@@ -75,7 +75,8 @@ func SelectLatestTenPosts() ([]Post, error) {
 
 // Функция возвращает логин пользователя, которому принадлежит пост
 func SelectPostLogin(postId string) (string, error) {
-	query := `select login from posts inner join users on users.id = posts.user_id where posts.id = ?`
+	query := `select login from posts inner join 
+	users on users.id = posts.user_id where posts.id = ?`
 	row := DBConn.QueryRow(query, postId)
 	type UserLogin struct {
 		login string
